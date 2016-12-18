@@ -1,0 +1,48 @@
+FROM ubuntu:14.04
+MAINTAINER Icaro Oliveira <icarofua@gmail.com>
+
+ENV HOME /root
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --force-yes build-essential cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev \
+                    libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev libv4l-dev libatlas-base-dev gfortran \
+                    libxine-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libv4l-dev libtbb-dev libmp3lame-dev \
+                    libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev libxvidcore-dev x264 v4l-utils unzip \
+                    libtesseract-dev python-dev python-tk python-numpy python3-dev python3-numpy && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* \
+           /tmp/* \
+           /var/tmp/*
+
+RUN cd /opt && git clone https://github.com/Itseez/opencv_contrib.git && cd opencv_contrib && git checkout -b 3.1.0
+RUN cd /opt && git clone https://github.com/Itseez/opencv.git && cd opencv && git checkout -b 3.1.0
+
+RUN cd /opt/opencv && mkdir release && cd release && \
+          cmake -D CMAKE_BUILD_TYPE=Release \
+            -D CMAKE_INSTALL_PREFIX=/usr \
+            -D PYTHON_EXECUTABLE=/usr/bin/python \
+            -D CMAKE_SKIP_RPATH=ON \
+            -D BUILD_TESTS=OFF \
+            -D ENABLE_SSE=ON \
+            -D ENABLE_SSE2=ON \
+            -D ENABLE_SSE3=ON \
+            -D ENABLE_SSSE3=ON \
+            -D ENABLE_SSE41=ON \
+            -D ENABLE_SSE42=ON \
+            -D BUILD_EXAMPLES=OFF \
+            -D INSTALL_C_EXAMPLES=OFF \
+            -D INSTALL_PYTHON_EXAMPLES=OFF \
+            -D WITH_XINE=OFF \
+            -D WITH_QT=OFF \
+            -D WITH_QT_OPENGL=OFF \
+            -D WITH_UNICAP=OFF \
+            -D WITH_PVAPI=OFF \
+            -D WITH_OPENNI=ON \
+            -D WITH_TBB=OFF \
+            -D WITH_IPP=OFF \
+            -D WITH_CUDA=OFF \
+	          -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib/modules \
+            -D USE_FAST_MATH=ON ..
+
+RUN cd /opt/opencv/release && make -j $(nproc) && make install
